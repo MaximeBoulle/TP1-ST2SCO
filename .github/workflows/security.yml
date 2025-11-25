@@ -53,6 +53,11 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
+      - name: Upload CodeQL SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{github.workspace}}/codeql-results.sarif
+
   secret-scanning:
     name: Secret Scanning
     runs-on: ubuntu-latest
