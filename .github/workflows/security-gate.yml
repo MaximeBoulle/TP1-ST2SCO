@@ -95,12 +95,15 @@ jobs:
           path: ${{github.workspace}}/reports
 
       - name: Initialize CodeQL (Blocking)
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript
 
       - name: Perform CodeQL Analysis (Blocking)
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
+
+      - name: Upload CodeQL SARIF file
+        uses: actions/upload-artifact@v4
 
       - name: Run Gitleaks (Blocking)
         uses: gitleaks/gitleaks-action@v2

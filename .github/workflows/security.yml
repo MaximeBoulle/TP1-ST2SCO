@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: codeql-results
-          path: /results/javascript.sarif
+          path: ${{ github.workspace }}/results/*.sarif
 
   secret-scanning:
     name: Secret Scanning
