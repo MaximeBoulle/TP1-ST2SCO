@@ -58,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sast-report
-          path: /home/runner/work/TP1-ST2SCO/results/codeql-results.sarif
+          path: /home/runner/work/TP1-ST2SCO/results/*.sarif
         if: always()
 
   secret-scanning:
