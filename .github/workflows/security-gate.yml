@@ -120,16 +120,3 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Security Gate Summary
-        if: success()
-        run: |
-          echo "::notice::✅ Security gate passed! No critical or high vulnerabilities detected."
-          echo "::notice::This PR is safe to merge from a security perspective."
-
-      - name: Security Gate Failed
-        if: failure()
-        run: |
-          echo "::error::❌ Security gate failed! Critical or high vulnerabilities detected."
-          echo "::error::This PR cannot be merged until security issues are resolved."
-          exit 1
