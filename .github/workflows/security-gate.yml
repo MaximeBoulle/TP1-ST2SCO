@@ -46,14 +46,21 @@ jobs:
           path: ${{github.workspace}}/reports
 
       - name: Run CodeQL Analysis
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         continue-on-error: true
         with:
           languages: javascript
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         continue-on-error: true
+
+      - name: Upload CodeQL results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-results
+          path: /home/runner/work/TP1-ST2SCO/results/*.sarif
+        if: always()
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
