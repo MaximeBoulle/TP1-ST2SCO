@@ -1,0 +1,121 @@
+name: Security Gate Pipeline
+
+on:
+  # Non-blocking scan on development branches
+  push:
+    branches-ignore:
+      - master
+
+  # Blocking security gate on PRs to main
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+
+jobs:
+  non-blocking-scan:
+    name: Non-Blocking Security Scan (Development)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run SCA Analysis
+        uses: dependency-check/Dependency-Check_Action@main
+        continue-on-error: true
+        with:
+          project: 'security-scan'
+          path: '.'
+          format: 'HTML'
+          out: 'reports'
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+
+      - name: Upload SCA Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sca-report-dev
+          path: ${{github.workspace}}/reports
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        continue-on-error: true
+        with:
+          languages: javascript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        continue-on-error: true
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Developers
+        if: always()
+        run: |
+          echo "::notice::Security scan completed on development branch. Check artifacts for detailed reports."
+          echo "::notice::Vulnerabilities detected are informational only and do not block the workflow."
+
+  blocking-security-gate:
+    name: Blocking Security Gate (Main Branch)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run SCA Analysis (Blocking)
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'security-gate'
+          path: '.'
+          format: 'HTML'
+          out: 'reports'
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+
+      - name: Upload SCA Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sca-report-gate
+          path: ${{github.workspace}}/reports
+
+      - name: Initialize CodeQL (Blocking)
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+
+      - name: Perform CodeQL Analysis (Blocking)
+        uses: github/codeql-action/analyze@v3
+
+      - name: Run Gitleaks (Blocking)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Security Gate Summary
+        if: success()
+        run: |
+          echo "::notice::✅ Security gate passed! No critical or high vulnerabilities detected."
+          echo "::notice::This PR is safe to merge from a security perspective."
+
+      - name: Security Gate Failed
+        if: failure()
+        run: |
+          echo "::error::❌ Security gate failed! Critical or high vulnerabilities detected."
+          echo "::error::This PR cannot be merged until security issues are resolved."
+          exit 1
