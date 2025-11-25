@@ -55,6 +55,9 @@ jobs:
 
       - name: Upload CodeQL results as artifact
         uses: actions/upload-artifact@v4
+        with:
+          name: codeql-results
+          path: /results/javascript.sarif
 
   secret-scanning:
     name: Secret Scanning
