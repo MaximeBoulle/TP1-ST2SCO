@@ -9,7 +9,10 @@ on:
       - master
 
 permissions:
-  security-events: read
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   sca-analysis:
     name: SCA Analysis (Software Composition Analysis)
